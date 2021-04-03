@@ -7,26 +7,31 @@ class Card:
         self.__value = value
         self.__suit = suit
 
-    def card_info(self) -> str:
-        return f"{self.__value} {self.__suit}"
-
     def cost_card(self) -> int:
-        if self.__value in " А23456789":
-            return " А23456789".index(self.__value)
+        if self.__value in ("", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10"):
+            return ("", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10").index(self.__value)
         elif self.__value in ("Валет", "Дама", "Король"):
             return 10
-        elif self.__value == "Т":
+        elif self.__value == "Туз":
             return 11
+
+    def card_info(self) -> str:
+        return f"{self.__value}{self.__suit}"  # 4♥
 
 
 class DeckCards:
-    def __init__(self):
-        self.deck_cards = [Card(a, b) for b in ("♣", "♥", "♠", "♦") for a in
-                           ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Валет", "Дама", "Король", "Туз")]
+    def __init__(self) -> None:
+        self.__deck_cards = [Card(a, b) for b in ("♣", "♥", "♠", "♦") for a in
+                             ("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Валет", "Дама", "Король", "Туз")]
 
-    def show_deck(self):
-        for card in self.deck_cards:
-            print(card.card_info())
+        random.shuffle(self.__deck_cards)
+
+    def get_carf_from_deck(self) -> Card:  # Card("5", "♣")
+        return self.__deck_cards.pop()
+
+    # def show_deck(self):
+    #     for card in self.deck_cards:
+    #         print(card.card_info())
 
 
 class Player:
@@ -37,67 +42,61 @@ class Player:
         self.money = 100
 
     def info(self):
-        print(f'Player: {self.__name}\nMoney: {self.money}\nHand: {self._hand}')
+        return f'{self.__name}\nHand: {self._hand}'
 
     def hand(self, karta):
         self._hand.append(karta.card_info())
+        self.score += karta.cost_card()
 
     def show_hand(self):
-        return self._hand
+        return f"{self._hand}"  # score:{self.score}
 
 
 class Dealer(Player):
-
-    @staticmethod
-    def shuffle_the_cards(DeckCards):
-        random.shuffle(DeckCards.deck_cards)
-
-    @staticmethod
-    def get_carf_from_deck(DeckCards):
-        DeckCards.deck_cards.pop()
-        return DeckCards.deck_cards.pop()
+    def get_cards(self, karta):
+        while self.score <= 16:
+            self.hand(karta)
 
 
 class Game:
     def __init__(self):
-        self.player = Player(name='Player1')
+        self.igrok = Player(name='Player')
         self.dealer = Dealer(name="Dealer")
-        self.stopka = DeckCards()
-        self.card = self.dealer.get_carf_from_deck(self.stopka)
+        self.koloda = DeckCards()
 
-    def rules(self):
-        if self.player.score > 21:
-            print(f'\nВы проиграли.\n{self.player.info()}\n{self.dealer.info()}')
-        elif self.dealer.score > 21 and self.player.score <= 21:
-            print(f'\nВы победили.\n{self.player.info()}\n{self.dealer.info()}')
-        elif self.dealer.score == self.player.score:
-            print(f'\nНичья.\n{self.player.info()}\n{self.dealer.info()}')
-        elif self.dealer.score > self.player.score:
-            print(f'\nВы проиграли.\n{self.player.info()}\n{self.dealer.info()}')
-        elif self.dealer.score < self.player.score:
-            print(f'\nВы победили.\n{self.player.info()}\n{self.dealer.info()}')
+    def check(self):
+        if self.igrok.score > 21:
+            print(f'\nВы проиграли.\n{self.igrok.info()}\n{self.dealer.info()}')
+        elif self.dealer.score > 21 and self.igrok.score <= 21:
+            print(f'\nВы победили.\n{self.igrok.info()}\n{self.dealer.info()}')
+        elif self.dealer.score == self.igrok.score:
+            print(f'\nНичья.\n{self.igrok.info()}\n{self.dealer.info()}')
+        elif self.dealer.score > self.igrok.score:
+            print(f'\nВы проиграли.\n{self.igrok.info()}\n{self.dealer.info()}')
+        elif self.dealer.score < self.igrok.score:
+            print(f'\nВы победили.\n{self.igrok.info()}\n{self.dealer.info()}')
 
     def start(self):
-        self.dealer.shuffle_the_cards(self.stopka)
 
-        self.player.hand(self.card)
-        self.player.hand(self.card)
+        self.igrok.hand(self.koloda.get_carf_from_deck())
+        self.igrok.hand(self.koloda.get_carf_from_deck())
 
-        self.dealer.hand(self.card)
-        self.dealer.hand(self.card)
+        self.dealer.hand(self.koloda.get_carf_from_deck())
+        self.dealer.hand(self.koloda.get_carf_from_deck())
 
-        print(self.player.show_hand())
+        print(self.igrok.show_hand())
 
-        while self.player.score < 21:
-            answer = input("Ещё карту? y/n")
+        while self.igrok.score < 21:
+            answer = input("Ещё карту? y/n ")
             if answer == "y":
-                self.player.hand(self.card)
-                print(self.player.show_hand())
-        #     elif answer == "n":
-        #
-        # print(self.rules())
+                self.igrok.hand(self.koloda.get_carf_from_deck())
+                print(self.igrok.show_hand())
+            elif answer == "n":
+                print(self.igrok.show_hand())
+                self.dealer.get_cards(self.koloda.get_carf_from_deck())
+                break
 
-        # self.player.info()
+        self.check()
 
 
 def main():

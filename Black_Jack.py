@@ -16,9 +16,8 @@ class Card:
         elif self.__value == "Т":
             return 11
 
-    def card_info(self):  # -> str:
-        return f"{self.__value}{self.__suit}"  # 4♥
-        # return self.__value, self.__suit
+    def card_info(self):
+        return f"{self.__value}{self.__suit}"
 
 
 class DeckCards:
@@ -28,12 +27,12 @@ class DeckCards:
 
         random.shuffle(self.__deck_cards)
 
-    def get_carf_from_deck(self) -> Card:  # Card("5", "♣")
+    def get_card_from_deck(self) -> Card:  # Card("5", "♣")
         return self.__deck_cards.pop()
 
-    # def show_deck(self):
-    #     for card in self.__deck_cards:
-    #         print(card.card_info())
+    def show_deck(self):
+        for card in self.__deck_cards:
+            print(card.card_info())
 
 
 class Player:
@@ -44,13 +43,13 @@ class Player:
         self.money = 100
 
     def info(self):
-        return f'{self.__name} hand: {self._hand} - Score {self.score}'
+        return f'{self.__name} hand: {self._hand} - Score {self.score}     |money = {self.money}|'
 
     def hand(self, karta):
         self._hand.append(karta.card_info())
         self.score += karta.cost_card()
 
-    def show_hand(self):
+    def show_hand(self):  # old
         return f"{self._hand} score:{self.score}"
 
     def new_show_hand(self):
@@ -73,7 +72,7 @@ class Player:
 class Dealer(Player):
     def get_cards(self, koloda):
         while self.score <= 16:
-            self.hand(koloda.get_carf_from_deck())
+            self.hand(koloda.get_card_from_deck())
 
 
 class Game:
@@ -81,36 +80,63 @@ class Game:
         self.igrok = Player(name='Player')
         self.dealer = Dealer(name="Dealer")
         self.koloda = DeckCards()
+        self.rate = 0
+
+    def rates(self):
+        if self.igrok.money == 0:
+            print("GameOver! You Lose!\n")
+            pass
+
+        elif self.dealer.money == 0:
+            print("GameOver! You Win!\n")
+        self.rate = int(input(f'Igrok.money = {self.igrok.money}\nDealer.money = {self.dealer.money}\nRates: '))
+        while self.rate > self.igrok.money or self.rate > self.dealer.money:
+            print("not enough money, try again ")
+            self.rate = int(input('Ваша ставка: '))
+
+        self.igrok.money -= self.rate
+        self.dealer.money -= self.rate
 
     def check(self):
         if self.igrok.score > 21:
+            self.dealer.money += self.rate * 2
             print(f'\nВы проиграли:\n{self.igrok.info()}\n{self.dealer.info()}')
+
         elif self.dealer.score > 21 and self.igrok.score <= 21:
+            self.igrok.money += self.rate * 2
             print(f'\nВы победили.\n{self.igrok.info()}\n{self.dealer.info()}')
+
         elif self.dealer.score == self.igrok.score:
+            self.igrok.money += self.rate
+            self.dealer.money += self.rate
             print(f'\nНичья.\n{self.igrok.info()}\n{self.dealer.info()}')
+
         elif self.dealer.score > self.igrok.score:
+            self.dealer.money += self.rate * 2
             print(f'\nВы проиграли.\n{self.igrok.info()}\n{self.dealer.info()}')
+
         elif self.dealer.score < self.igrok.score:
+            self.igrok.money += self.rate * 2
             print(f'\nВы победили.\n{self.igrok.info()}\n{self.dealer.info()}')
 
     def start(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-        self.igrok.hand(self.koloda.get_carf_from_deck())
-        self.igrok.hand(self.koloda.get_carf_from_deck())
+        self.rates()
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-        self.dealer.hand(self.koloda.get_carf_from_deck())
-        self.dealer.hand(self.koloda.get_carf_from_deck())
+        self.igrok.hand(self.koloda.get_card_from_deck())
+        self.igrok.hand(self.koloda.get_card_from_deck())
+
+        self.dealer.hand(self.koloda.get_card_from_deck())
+        self.dealer.hand(self.koloda.get_card_from_deck())
 
         self.igrok.new_show_hand()
-        # self.dealer.new_show_hand()
-        # print(self.igrok.show_hand())  # ['5♥', '2♠'] score:7
 
         while self.igrok.score < 21:
             answer = input("Ещё карту? y/n ")
             os.system('cls' if os.name == 'nt' else 'clear')
             if answer == "y":
-                self.igrok.hand(self.koloda.get_carf_from_deck())
+                self.igrok.hand(self.koloda.get_card_from_deck())
                 self.igrok.new_show_hand()
             elif answer == "n":
                 self.igrok.new_show_hand()
@@ -118,11 +144,17 @@ class Game:
                 break
 
         self.check()
+        self.igrok._hand = []
+        self.dealer._hand = []
+        self.igrok.score = 0
+        self.dealer.score = 0
+        input("\nPUSH A BUTTON TO GO THE NEXT ROUND")
 
 
 def main():
     game = Game()
-    game.start()
+    while True:
+        game.start()
 
 
 if __name__ == '__main__':
